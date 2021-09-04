@@ -16,11 +16,11 @@
         <RistPlatform>x64</RistPlatform>
       </PropertyGroup>
     </When>
-	<Otherwise>
+    <Otherwise>
       <PropertyGroup Label="UserMacros">
         <RistPlatform>$(Platform)</RistPlatform>
       </PropertyGroup>
-	</Otherwise>
+    </Otherwise>
   </Choose>
 
   <!-- Compilation and link options -->
