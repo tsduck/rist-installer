@@ -110,6 +110,10 @@ if $GIT_UPDATE; then
         git clone "$REPO_URL" "$REPO_DIR"
         [[ -d "$REPO_DIR/.git" ]] || error "failed to clone $REPO_URL"
     fi
+    if [[ -n "$TAG" ]]; then
+        echo "Checking out $TAG ..."
+        (cd "$REPO_DIR"; git checkout "$TAG")
+    fi
 fi
 
 # Get librist version

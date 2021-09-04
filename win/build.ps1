@@ -164,10 +164,10 @@ if ((-not $NoGit) -and (-not $NoBuild)) {
 # Get librist version from repository.
 Push-Location $RepoDir
 if ($BareVersion) {
-    $Version = (git describe --tags ) -replace '^v','' -replace '-g.*',''
+    $Version = (git describe --tags) -replace '^v','' -replace '-g.*',''
 }
 else {
-    $Version = (git describe --tags ) -replace '^v','' -replace '-g','-'
+    $Version = (git describe --tags) -replace '^v','' -replace '-g','-'
 }
 Pop-Location
 
