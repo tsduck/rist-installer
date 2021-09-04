@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# RIST post-installation script on Ubuntu and Debian systems.
+
+if [[ "$1" = "configure" ]]; then
+    # Fix file permissions and ownership.
+    chown -R root:root /usr/bin/rist2rist /usr/bin/ristreceiver /usr/bin/ristsender /usr/bin/ristsrppasswd
+    chmod 0755 /usr/bin/rist2rist /usr/bin/ristreceiver /usr/bin/ristsender /usr/bin/ristsrppasswd
+fi
+
+exit 0

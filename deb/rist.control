@@ -1,0 +1,11 @@
+Package: rist
+Source: rist
+Version: {{VERSION}}
+Maintainer: Thierry Lelegard <thierry@lelegard.fr>
+Architecture: {{ARCH}}
+Section: free/video
+Priority: optional
+Depends: libc6, libgcc1, librist (= {{VERSION}})
+Description: RIST tools
+ RIST is the "Reliable Internet Stream Transport".
+ This package provides the basic RIST tools.

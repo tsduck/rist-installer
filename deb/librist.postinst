@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# RIST library post-installation script on Ubuntu and Debian systems.
+
+if [[ "$1" = "configure" ]]; then
+    # Fix file permissions and ownership.
+    chown -R root:root /usr/lib*/librist.so*
+    chmod 0644 /usr/lib*/librist.so*
+fi
+
+exit 0
