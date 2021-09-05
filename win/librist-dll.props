@@ -6,7 +6,7 @@
   <PropertyGroup Label="UserMacros">
     <RistLibrary>librist.lib</RistLibrary>
   </PropertyGroup>
-  <Import Project="$(LIBRIST)\librist.props"/>
+  <Import Project="$(LIBRIST)\librist-common.props"/>
   <Target Name="AfterBuild">
     <Copy SourceFiles="$(LIBRIST)\lib\$(Configuration)-$(RistPlatform)\librist.dll" DestinationFolder="$(OutDir)" />
   </Target>

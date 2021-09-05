@@ -6,5 +6,5 @@
   <PropertyGroup Label="UserMacros">
     <RistLibrary>librist.a</RistLibrary>
   </PropertyGroup>
-  <Import Project="$(LIBRIST)\librist.props"/>
+  <Import Project="$(LIBRIST)\librist-common.props"/>
 </Project>

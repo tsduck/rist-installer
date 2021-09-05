@@ -57,7 +57,7 @@ VIAddVersionKey FileVersion "${VersionInfo}"
 VIAddVersionKey FileDescription "RIST Installer"
 
 ; Name of binary installer file.
-OutFile "${InstallerDir}\${OutputName}.exe"
+OutFile "${InstallerDir}\${ProductName}-${Version}.exe"
 
 ; Generate a Unicode installer (default is ANSI).
 Unicode true
@@ -120,26 +120,21 @@ Section "Install"
     ; Visual Studio property files.
     SetOutPath "$INSTDIR"
     File /oname=COPYING.txt "${RepoDir}\COPYING"
-    File "${ScriptDir}\librist.props"
+    File "${ScriptDir}\librist-common.props"
     File "${ScriptDir}\librist-dll.props"
     File "${ScriptDir}\librist-static.props"
+    Delete "${ScriptDir}\librist.props"
 
     ; Header files.
     CreateDirectory "$INSTDIR\include"
     CreateDirectory "$INSTDIR\include\librist"
     SetOutPath "$INSTDIR\include\librist"
     File "${RepoDir}\include\librist\*.h"
-
-    ; Libraries and tools.
-    CreateDirectory "$INSTDIR\lib"
-    CreateDirectory "$INSTDIR\bin"
-
-!ifndef Arch
-    ; Multiple architectures.
-    SetOutPath "$INSTDIR\include\librist"
     File "${BuildDir}\Release-x64\include\librist\*.h"
     File "${BuildDir}\Release-x64\include\vcs_version.h"
 
+    ; Libraries.
+    CreateDirectory "$INSTDIR\lib"
     CreateDirectory "$INSTDIR\lib\Release-x64"
     SetOutPath "$INSTDIR\lib\Release-x64"
     File "${BuildDir}\Release-x64\librist.dll"
@@ -164,37 +159,14 @@ Section "Install"
     File "${BuildDir}\Debug-Win32\librist.lib"
     File "${BuildDir}\Debug-Win32\librist.a"
 
+    ; Tools.
+    CreateDirectory "$INSTDIR\bin"
     SetOutPath "$INSTDIR\bin"
-    File "${BuildDir}\Release-x64\librist.dll"
-    File "${BuildDir}\Release-x64\tools\rist2rist.exe"
-    File "${BuildDir}\Release-x64\tools\ristreceiver.exe"
-    File "${BuildDir}\Release-x64\tools\ristsender.exe"
-    File "${BuildDir}\Release-x64\tools\ristsrppasswd.exe"
-!else
-    ; Single architecture.
-    SetOutPath "$INSTDIR\include\librist"
-    File "${BuildDir}\Release-${Arch}\include\librist\*.h"
-    File "${BuildDir}\Release-${Arch}\include\vcs_version.h"
-
-    CreateDirectory "$INSTDIR\lib\Release-${Arch}"
-    SetOutPath "$INSTDIR\lib\Release-${Arch}"
-    File "${BuildDir}\Release-${Arch}\librist.dll"
-    File "${BuildDir}\Release-${Arch}\librist.lib"
-    File "${BuildDir}\Release-${Arch}\librist.a"
-
-    CreateDirectory "$INSTDIR\lib\Debug-${Arch}"
-    SetOutPath "$INSTDIR\lib\Debug-${Arch}"
-    File "${BuildDir}\Debug-${Arch}\librist.dll"
-    File "${BuildDir}\Debug-${Arch}\librist.lib"
-    File "${BuildDir}\Debug-${Arch}\librist.a"
-
-    SetOutPath "$INSTDIR\bin"
-    File "${BuildDir}\Release-${Arch}\librist.dll"
-    File "${BuildDir}\Release-${Arch}\tools\rist2rist.exe"
-    File "${BuildDir}\Release-${Arch}\tools\ristreceiver.exe"
-    File "${BuildDir}\Release-${Arch}\tools\ristsender.exe"
-    File "${BuildDir}\Release-${Arch}\tools\ristsrppasswd.exe"
-!endif
+    File "${BuildDir}\Release-Win32\librist.dll"
+    File "${BuildDir}\Release-Win32\tools\rist2rist.exe"
+    File "${BuildDir}\Release-Win32\tools\ristreceiver.exe"
+    File "${BuildDir}\Release-Win32\tools\ristsender.exe"
+    File "${BuildDir}\Release-Win32\tools\ristsrppasswd.exe"
 
     ; Add an environment variable to installation root.
     WriteRegStr HKLM ${EnvironmentKey} "LIBRIST" "$INSTDIR"
@@ -207,6 +179,8 @@ Section "Install"
  
     ; Declare uninstaller in "Add/Remove Software" control panel
     WriteRegStr HKLM "${UninstallKey}" "DisplayName" "${ProductName}"
+    WriteRegStr HKLM "${UninstallKey}" "Publisher" "VideoLAN and librist"
+    WriteRegStr HKLM "${UninstallKey}" "URLInfoAbout" "https://code.videolan.org/rist/librist"
     WriteRegStr HKLM "${UninstallKey}" "DisplayVersion" "${Version}"
     WriteRegStr HKLM "${UninstallKey}" "DisplayIcon" "$INSTDIR\Uninstall.exe"
     WriteRegStr HKLM "${UninstallKey}" "UninstallString" "$INSTDIR\Uninstall.exe"
@@ -240,7 +214,7 @@ Section "Uninstall"
     RMDir /r "$0\include"
     RMDir /r "$0\bin"
     RMDir /r "$0\lib"
-    Delete "$0\librist.props"
+    Delete "$0\librist-common.props"
     Delete "$0\librist-dll.props"
     Delete "$0\librist-static.props"
     Delete "$0\COPYING.txt"

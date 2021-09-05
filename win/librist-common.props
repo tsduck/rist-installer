@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<!-- Visual Studio or MSBuild property file to use RIST static library -->
+<!-- Visual Studio or MSBuild common property file to use RIST library -->
 
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 

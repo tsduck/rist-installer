@@ -1,7 +1,7 @@
 Package: rist
 Source: rist
 Version: {{VERSION}}
-Maintainer: Thierry Lelegard <thierry@lelegard.fr>
+Maintainer: Unspecified <unspecified@unspecified.org>
 Architecture: {{ARCH}}
 Section: free/video
 Priority: optional

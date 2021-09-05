@@ -95,7 +95,6 @@ $RootDir = (Split-Path -Parent $PSScriptRoot)
 $InstallerDir = "$RootDir\installers"
 $BuildDir = "$RootDir\build"
 $RepoDir = "$BuildDir\librist"
-$PreInstallDir = "$BuildDir\install"
 
 # Cleanup when required.
 if ($Clean) {
@@ -106,7 +105,6 @@ if ($Clean) {
 
 # Create local build directories.
 [void] (New-Item -Path $BuildDir -ItemType Directory -Force)
-[void] (New-Item -Path $PreInstallDir -ItemType Directory -Force)
 [void] (New-Item -Path $InstallerDir -ItemType Directory -Force)
 
 # Locate NSIS, the Nullsoft Scriptable Installation System.
@@ -180,58 +178,69 @@ Write-Output "RIST version is $Version, Windows version info is $VersionInfo"
 # Build only if necessary.
 if (-not $NoBuild) {
 
+    Cleanup-Build
+
     # Get local architecture.
     if ([System.IntPtr]::Size -eq 4) {
         $LocalArch = "Win32"
         $OtherArch = "x64"
+        $CrossScript = "vcvarsx86_amd64.bat"
     }
     else {
         $LocalArch = "x64"
         $OtherArch = "Win32"
+        $CrossScript = "vcvarsamd64_x86.bat"
     }
 
-    # Build all build scripts using meson for local architecture.
-    Cleanup-Build
+    # Build using meson for local architecture.
     meson setup --backend vs2019 --buildtype release --default-library both $BuildDir\Release-${LocalArch} $RepoDir
     meson setup --backend vs2019 --buildtype debug   --default-library both $BuildDir\Debug-${LocalArch}   $RepoDir
 
+    meson compile -C $BuildDir\Release-${LocalArch}
+    meson compile -C $BuildDir\Debug-${LocalArch}
+
     # Currently, there is no way to build for the "other" architecture with meson.
-    # See: https://code.videolan.org/rist/librist/-/issues/123
+    # So, we are going the hacky way. Just pretend we are cross-compiling for
+    # the other architecture using the CMD script from VisualStudio, get the
+    # environment variables from the CMD command, temporarily set them for meson.
+    # It seems to work by magic...
 
-    # Manually craft the build environment for the "other" architecture.
-    #@@@ foreach ($Conf in @("Release", "Debug")) {
-    #@@@     $local = "$BuildDir\${Conf}-${LocalArch}"
-    #@@@     $other = "$BuildDir\${Conf}-${OtherArch}"
-    #@@@     # Copy-Item -Force -Recurse $BuildDir\${Conf}-${LocalArch} $BuildDir\${Conf}-${OtherArch}
-    #@@@     # Get-ChildItem -Recurse -Name $BuildDir\${Conf}-${OtherArch} | ForEach-Object {
-    #@@@     Get-ChildItem -Recurse -Name $local | ForEach-Object {
-    #@@@         $name = $_
-    #@@@         if (Test-Path "$local\$name" -PathType Container) {
-    #@@@             Write-Output "===> creating $other\$name"
-    #@@@             [void] (New-Item -Path "$other\$name" -ItemType Directory -Force)
-    #@@@         }
-    #@@@         else {
-    #@@@             (Get-Content -Raw "$local\$name") -replace "$LocalArch","$OtherArch" | Set-Content -Force "$other\$name"
-    #@@@             # $file = "$BuildDir\${Conf}-${OtherArch}\$_"
-    #@@@             # (Get-Content -Raw ${file}) -replace "$LocalArch","$OtherArch" | Set-Content -Force "${file}.new"
-    #@@@             # Move-Item -Force "${file}.new" ${file}
-    #@@@         }
-    #@@@     }
-    #@@@ }
+    # Search the CMD script from VisualStudio.
+    $Script = (Get-ChildItem -Recurse -Path "C:\Program Files*\Microsoft Visual Studio" -Include $CrossScript | Select-Object -First 1).FullName
+    if (-not $Script) {
+        Exit-Script "$CrossScript not found in Visual Studio"
+    }
 
-    # Build librist in all configurations.
-    foreach ($Conf in @("Release", "Debug")) {
-        meson compile -C $BuildDir\${Conf}-${LocalArch}
+    # Run the CMD script, get all environment variable, set modified ones.
+    $PreviousEnv = @{}
+    cmd /Q /a /d /c "`"$Script`" & set" | Select-string "^[a-zA-Z0-9_]*=" | ForEach-Object {
+        $s = $_ -split "=",2
+        $name = $s[0]
+        $value = $s[1]
+        $previous = (Get-Item env:$name -ErrorAction SilentlyContinue).Value
+        if ($value -ne $previous) {
+            $PreviousEnv[$name] = $previous
+            Set-Item env:$name $value
+        }
+    }
+
+    # Build using the other architecture.
+    meson setup --backend vs2019 --buildtype release --default-library both $BuildDir\Release-${OtherArch} $RepoDir
+    meson setup --backend vs2019 --buildtype debug   --default-library both $BuildDir\Debug-${OtherArch}   $RepoDir
+
+    meson compile -C $BuildDir\Release-${OtherArch}
+    meson compile -C $BuildDir\Debug-${OtherArch}
+
+    # Restore previous environment variables.
+    $PreviousEnv.GetEnumerator() | ForEach-Object {
+        $name = $_.Name
+        Set-Item env:$name $_.Value
     }
 }
 
-# Only when using single architecture.
-$ArchName = "-" + ($LocalArch -replace "x64","Win64")
-
 # Build the binary installer.
-# Remove /DArch when we can build 32 and 64-bit versions at the same time.
 Write-Output "Building installer ..."
 & $NSIS /V2 `
-    /DProductName=librist `    /DVersion=$Version `    /DVersionInfo=$VersionInfo `    /DOutputName=librist${ArchName}-${Version} `    /DArch=$LocalArch `    /DScriptDir=$ScriptDir `    /DRepoDir=$RepoDir `    /DBuildDir=$BuildDir `    /DInstallerDir=$InstallerDir `    "$ScriptDir\librist.nsi"
+    /DProductName=librist `    /DVersion=$Version `    /DVersionInfo=$VersionInfo `    /DScriptDir=$ScriptDir `    /DRepoDir=$RepoDir `    /DBuildDir=$BuildDir `    /DInstallerDir=$InstallerDir `    "$ScriptDir\librist.nsi"
 
 Exit-Script -NoPause:$NoPause
