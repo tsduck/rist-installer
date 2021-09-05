@@ -3,8 +3,7 @@
 # Official URL:
 https://code.videolan.org/rist/librist.git
 
-# TEMPORARY:
-# As long as merge request !188 is not merged in main repo, use this fork.
-# See https://code.videolan.org/rist/librist/-/merge_requests/188
-# Comment or remove the following line after merge is complete.
-https://code.videolan.org/lelegard/librist.git
+# If a temporary alternate URL is needed, for instance waiting for a
+# merge request to be merged, other URL's can be added below. Only
+# last (uncommented) URL is used.
+# https://code.videolan.org/lelegard/librist.git
