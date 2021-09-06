@@ -128,7 +128,7 @@ function Cleanup-Build()
 if ((-not $NoGit) -and (-not $NoBuild)) {
 
     # Get URL of repo from URL.txt file in root directory (remove comments, keep one line).
-    $RepoUrl = ((Get-Content ..\URL.txt) -notmatch '^ *$' -notmatch '^ *#' | Select-Object -Last 1)
+    $RepoUrl = ((Get-Content "$RootDir\URL.txt") -notmatch '^ *$' -notmatch '^ *#' | Select-Object -Last 1)
 
     # Clone repository or update it.
     # Note that git outputs its log on stderr, so use --quiet.
