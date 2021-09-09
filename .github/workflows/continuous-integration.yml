@@ -30,7 +30,7 @@ jobs:
     - name: Test package installation
       run: |
         sudo dpkg -i installers/*deb
-        ristreceiver --version; true
+        ls -l /usr/bin/*rist* /usr/lib*/*rist* /usr/include/*rist*
 
     - name: Upload packages
       uses: actions/upload-artifact@master
@@ -50,7 +50,9 @@ jobs:
       run: win/install-prerequisites.ps1 -NoPause
 
     - name: Build package
-      run: win/build.ps1 -GitHubActions -NoPause
+      run: |
+        win/build.ps1 -GitHubActions -NoPause
+        dir build -Recurse
 
     - name: Test package installation
       run: |
