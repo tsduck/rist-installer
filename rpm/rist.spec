@@ -47,7 +47,7 @@ development environment for applications that use RIST.
 %build
 mkdir -p build
 cd build
-meson ..
+meson .. --default-library both
 ninja
 
 %install
@@ -56,6 +56,7 @@ mkdir -p $RPM_BUILD_ROOT/%{_bindir} $RPM_BUILD_ROOT/%{_libdir} $RPM_BUILD_ROOT/%
 install -m 755 build/tools/rist2rist build/tools/ristreceiver build/tools/ristsender build/tools/ristsrppasswd $RPM_BUILD_ROOT/%{_bindir}
 cp -d build/librist.so build/librist.so.*[0-9] $RPM_BUILD_ROOT/%{_libdir}
 chmod 755 $RPM_BUILD_ROOT/%{_libdir}/librist.so*
+install -m 644 build/librist.a $RPM_BUILD_ROOT/%{_libdir}
 install -m 644 build/include/*.h build/include/librist/*.h include/librist/*.h $RPM_BUILD_ROOT/%{_includedir}/librist
 
 %clean
@@ -67,9 +68,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -n librist
 %defattr(-,root,root,-)
-%{_libdir}/librist.so*
+%{_libdir}/librist.so.*
 %license COPYING
 
 %files -n librist-devel
 %defattr(-,root,root,-)
+%{_libdir}/librist.so
+%{_libdir}/librist.a
 %{_includedir}/librist
