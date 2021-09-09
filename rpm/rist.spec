@@ -36,7 +36,7 @@ Requires: librist = %{version}-%{release}
 
 %description -n librist-devel
 RIST is the "Reliable Internet Stream Transport". This package provides the
-header files for developing applications that use RIST.
+development environment for applications that use RIST.
 
 # Disable debuginfo package.
 %global debug_package %{nil}

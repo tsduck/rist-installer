@@ -47,7 +47,7 @@ SYSROOT="$BUILD_DIR/tmproot"
 
 # Build RIST
 cd "$BUILD_DIR"
-meson librist
+meson librist --default-library both
 ninja
 
 # Prepare a package.
@@ -68,12 +68,13 @@ dpkg --build "$SYSROOT" "$INSTALLER_DIR"
 # Build librist package    
 prepare-deb librist
 mkdir -p "$SYSROOT/usr/lib"
-cp -d librist.so librist.so.*[0-9] "$SYSROOT/usr/lib"
+cp -d librist.so.*[0-9] "$SYSROOT/usr/lib"
 chmod 755 "$SYSROOT"/usr/lib/librist.so*
 dpkg --build "$SYSROOT" "$INSTALLER_DIR"
 
 # Build librist-dev package    
 prepare-deb librist-dev
-mkdir -p "$SYSROOT/usr/include/librist"
+mkdir -p "$SYSROOT/usr/lib" "$SYSROOT/usr/include/librist"
+cp -d librist.so librist.a "$SYSROOT/usr/lib"
 install -m 644 include/*.h include/librist/*.h librist/include/librist/*.h "$SYSROOT/usr/include/librist"
 dpkg --build "$SYSROOT" "$INSTALLER_DIR"

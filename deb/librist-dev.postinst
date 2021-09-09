@@ -3,7 +3,7 @@
 
 if [[ "$1" = "configure" ]]; then
     # Fix file permissions and ownership.
-    chown -R root:root /usr/include/librist /usr/include/librist/*
+    chown -R root:root /usr/lib*/librist.so /usr/lib*/librist.a /usr/include/librist /usr/include/librist/*
     chmod 0755 /usr/include/librist
     chmod 0644 /usr/include/librist/*
 fi

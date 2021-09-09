@@ -8,4 +8,4 @@ Priority: optional
 Depends: librist (= {{VERSION}})
 Description: Development files for RIST
  RIST is the "Reliable Internet Stream Transport". This package provides the
- header files for developing applications that use RIST.
+ development environment for applications that use RIST.
