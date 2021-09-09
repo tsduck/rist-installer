@@ -42,6 +42,11 @@
 
   Cleanup the build directory and exit. Do not build anything.
 
+ .PARAMETER GitHubActions
+
+  When used in a GitHub Action workflow, define the INSTALLER_EXE
+  environment variable with the base name of the binary installer file.
+
  .PARAMETER NoBuild
 
   Do not rebuild RIST library and tools. Assume that they are already built.
@@ -67,6 +72,7 @@
 param(
     [switch]$BareVersion = $false,
     [switch]$Clean = $false,
+    [switch]$GitHubActions = $false,
     [switch]$NoBuild = $false,
     [switch]$NoGit = $false,
     [switch]$NoPause = $false,
@@ -241,6 +247,18 @@ if (-not $NoBuild) {
 # Build the binary installer.
 Write-Output "Building installer ..."
 & $NSIS /V2 `
-    /DProductName=librist `    /DVersion=$Version `    /DVersionInfo=$VersionInfo `    /DScriptDir=$ScriptDir `    /DRepoDir=$RepoDir `    /DBuildDir=$BuildDir `    /DInstallerDir=$InstallerDir `    "$ScriptDir\librist.nsi"
+    /DProductName=librist `
+    /DVersion=$Version `
+    /DVersionInfo=$VersionInfo `
+    /DScriptDir=$ScriptDir `
+    /DRepoDir=$RepoDir `
+    /DBuildDir=$BuildDir `
+    /DInstallerDir=$InstallerDir `
+    "$ScriptDir\librist.nsi"
+
+# Define INSTALLER_EXE in GitHub Actions.
+if ($GitHubActions) {
+    Write-Output "INSTALLER_EXE=librist-${Version}.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+}
 
 Exit-Script -NoPause:$NoPause

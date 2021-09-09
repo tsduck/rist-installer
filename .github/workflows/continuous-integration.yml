@@ -1,0 +1,66 @@
+# GitHub Actions configuration file for continuous integration.
+# Build the binary packages for Ubuntu and Windows, post them as artifacts.
+# Trigger the workflow on push or pull request, for master branch only.
+# Also allow manual trigger (workflow_dispatch).
+
+name: Continuous integration
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  linux:
+    name: Linux build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Get repo
+      uses: actions/checkout@master
+
+    - name: Install dependencies
+      run: deb/install-prerequisites.sh
+
+    - name: Build packages
+      run: deb/build.sh
+
+    - name: Test package installation
+      run: |
+        sudo dpkg -i installers/*deb
+        ristreceiver --version
+
+    - name: Upload packages
+      uses: actions/upload-artifact@master
+      with:
+        name: ubuntu-packages
+        path: installers/*.deb
+
+  windows:
+    name: Windows build
+    runs-on: windows-latest
+    steps:
+
+    - name: Get repo
+      uses: actions/checkout@master
+
+    - name: Install dependencies
+      run: build/install-prerequisites.ps1 -NoPause
+
+    - name: Build package
+      run: win/build.ps1 -GitHubActions -NoPause
+
+    - name: Test package installation
+      run: |
+        Start-Process -FilePath installers\${{ env.INSTALLER_EXE }} -ArgumentList @("/S") -Wait
+        $librist = [System.Environment]::GetEnvironmentVariable("LIBRIST","Machine")
+        Write-Output "LIBRIST: $librist"
+        & $librist\bin\ristreceiver --version
+
+    - name: Upload package
+      uses: actions/upload-artifact@master
+      with:
+        name: windows-package
+        path: installers/${{ env.INSTALLER_EXE }}
