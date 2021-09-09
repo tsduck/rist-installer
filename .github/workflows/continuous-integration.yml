@@ -59,7 +59,7 @@ jobs:
         Start-Process -FilePath installers\${{ env.INSTALLER_EXE }} -ArgumentList @("/S") -Wait
         $librist = [System.Environment]::GetEnvironmentVariable("LIBRIST","Machine")
         Write-Output "LIBRIST: $librist"
-        & $librist\bin\ristreceiver --version
+        Get-ChildItem -Recurse $librist
 
     - name: Upload package
       uses: actions/upload-artifact@master
