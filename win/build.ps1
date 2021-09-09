@@ -181,40 +181,13 @@ $VersionInfo = "$($VField[0]).$($VField[1]).$($VField[2]).$($VField[3])"
 
 Write-Output "RIST version is $Version, Windows version info is $VersionInfo"
 
-# Build only if necessary.
-if (-not $NoBuild) {
-
-    Cleanup-Build
-
-    # Get local architecture.
-    if ([System.IntPtr]::Size -eq 4) {
-        $LocalArch = "Win32"
-        $OtherArch = "x64"
-        $CrossScript = "vcvarsx86_amd64.bat"
-    }
-    else {
-        $LocalArch = "x64"
-        $OtherArch = "Win32"
-        $CrossScript = "vcvarsamd64_x86.bat"
-    }
-
-    # Build using meson for local architecture.
-    meson setup --backend vs2019 --buildtype release --default-library both $BuildDir\Release-${LocalArch} $RepoDir
-    meson setup --backend vs2019 --buildtype debug   --default-library both $BuildDir\Debug-${LocalArch}   $RepoDir
-
-    meson compile -C $BuildDir\Release-${LocalArch}
-    meson compile -C $BuildDir\Debug-${LocalArch}
-
-    # Currently, there is no way to build for the "other" architecture with meson.
-    # So, we are going the hacky way. Just pretend we are cross-compiling for
-    # the other architecture using the CMD script from VisualStudio, get the
-    # environment variables from the CMD command, temporarily set them for meson.
-    # It seems to work by magic...
-
-    # Search the CMD script from VisualStudio.
-    $Script = (Get-ChildItem -Recurse -Path "C:\Program Files*\Microsoft Visual Studio" -Include $CrossScript | Select-Object -First 1).FullName
+# A function to define all environment variables from a VS .bat script.
+# Return the previous values of modified environment variables.
+function Update-Environment([string]$ScriptName)
+{
+    $Script = (Get-ChildItem -Recurse -Path "C:\Program Files*\Microsoft Visual Studio" -Include $ScriptName | Select-Object -First 1).FullName
     if (-not $Script) {
-        Exit-Script "$CrossScript not found in Visual Studio"
+        Exit-Script "$OtherScript not found in Visual Studio"
     }
 
     # Run the CMD script, get all environment variable, set modified ones.
@@ -229,6 +202,50 @@ if (-not $NoBuild) {
             Set-Item env:$name $value
         }
     }
+    return $PreviousEnv
+}
+
+# A function to restore a previous saved set of environment variables.
+function Restore-Environment($PreviousEnv)
+{
+    $PreviousEnv.GetEnumerator() | ForEach-Object {
+        $name = $_.Name
+        Set-Item env:$name $_.Value
+    }
+}
+
+# Build only if necessary.
+if (-not $NoBuild) {
+
+    Cleanup-Build
+
+    # Get local architecture.
+    if ([System.IntPtr]::Size -eq 4) {
+        $LocalArch = "Win32"
+        $OtherArch = "x64"
+        $LocalScript = "vcvars32.bat"
+        $OtherScript = "vcvarsx86_amd64.bat"
+    }
+    else {
+        $LocalArch = "x64"
+        $OtherArch = "Win32"
+        $LocalScript = "vcvars64.bat"
+        $OtherScript = "vcvarsamd64_x86.bat"
+    }
+
+    # Setup environment for local compilation.
+    $PreviousEnv = (Update-Environment $LocalScript)
+
+    # Build using meson for local architecture.
+    meson setup --backend vs2019 --buildtype release --default-library both $BuildDir\Release-${LocalArch} $RepoDir
+    meson setup --backend vs2019 --buildtype debug   --default-library both $BuildDir\Debug-${LocalArch}   $RepoDir
+
+    meson compile -C $BuildDir\Release-${LocalArch}
+    meson compile -C $BuildDir\Debug-${LocalArch}
+
+    # Restore environment and set it for cross-compilation.
+    Restore-Environment $PreviousEnv
+    $PreviousEnv = (Update-Environment $OtherScript)
 
     # Build using the other architecture.
     meson setup --backend vs2019 --buildtype release --default-library both $BuildDir\Release-${OtherArch} $RepoDir
@@ -238,10 +255,7 @@ if (-not $NoBuild) {
     meson compile -C $BuildDir\Debug-${OtherArch}
 
     # Restore previous environment variables.
-    $PreviousEnv.GetEnumerator() | ForEach-Object {
-        $name = $_.Name
-        Set-Item env:$name $_.Value
-    }
+    Restore-Environment $PreviousEnv
 }
 
 # Build the binary installer.
