@@ -29,14 +29,14 @@ jobs:
 
     - name: Test package installation
       run: |
-        sudo dpkg -i installers/*deb
+        sudo dpkg -i installers/librist*.deb
         ls -l /usr/bin/*rist* /usr/lib*/*rist* /usr/include/*rist*
 
     - name: Upload packages
       uses: actions/upload-artifact@master
       with:
         name: ubuntu-packages
-        path: installers/*.deb
+        path: installers/librist*.deb
 
   windows:
     name: Windows build

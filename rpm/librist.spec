@@ -42,6 +42,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/rist*
 %{_libdir}/librist.so*
 %{_libdir}/librist.a
+%{_libdir}/pkgconfig/librist.pc
 %{_includedir}/librist
 %license COPYING
 
