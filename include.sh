@@ -13,7 +13,8 @@ REPO_DIR="$BUILD_DIR/librist"
 INSTALLER_DIR="$ROOT_DIR/installers"
 
 # URL of git repository.
-REPO_URL=$(grep -v -e '^ *$' -e '^ *#' "$ROOT_DIR/URL.txt" | tail -1)
+REPO_URL=$(grep -v -e '^ *$' -e '^ *#' "$ROOT_DIR/URL.txt" | grep 'URL=' | sed 's/URL=//' | tail -1)
+REPO_BRANCH=$(grep -v -e '^ *$' -e '^ *#' "$ROOT_DIR/URL.txt" | grep 'BRANCH=' | sed 's/BRANCH=//' | tail -1)
 
 # Display help text
 showhelp()
@@ -104,11 +105,12 @@ mkdir -p "$BUILD_DIR" "$INSTALLER_DIR"
 if $GIT_UPDATE; then
     if [[ -d "$REPO_DIR/.git" ]]; then
         echo "Updating repository ..."
-        (cd "$REPO_DIR"; git checkout master && git pull origin master)
+        (cd "$REPO_DIR"; git checkout $REPO_BRANCH && git pull origin $REPO_BRANCH)
     else
         echo "Cloning $REPO_URL ..."
         git clone "$REPO_URL" "$REPO_DIR"
         [[ -d "$REPO_DIR/.git" ]] || error "failed to clone $REPO_URL"
+        (cd "$REPO_DIR"; git checkout $REPO_BRANCH)
     fi
     if [[ -n "$TAG" ]]; then
         echo "Checking out $TAG ..."

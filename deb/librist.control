@@ -7,5 +7,4 @@ Section: free/video
 Priority: optional
 Depends: libc6, libgcc1, libcmocka0, libcjson1, libmbedtls12
 Description: RIST library
- RIST is the "Reliable Internet Stream Transport".
- This package provides the RIST library.
+ Reliable Internet Stream Transport (RIST)

@@ -55,13 +55,11 @@ RELEASE=1
 RPM_VERSION=${VERSION}-${RELEASE}${DISTRO}
 
 # Build source tarball.
-TARFILE="$BUILD_DIR/rist-$VERSION.tgz"
-tar -C "$BUILD_DIR" -czf "$TARFILE" -p --owner=0 --group=0 --exclude .git --transform "s|^librist/|rist-$VERSION/|" librist
+TARFILE="$BUILD_DIR/librist-$VERSION.tgz"
+tar -C "$BUILD_DIR" -czf "$TARFILE" -p --owner=0 --group=0 --exclude .git --transform "s|^librist/|librist-$VERSION/|" librist
 cp -f "$TARFILE" "$RPMBUILDROOT/SOURCES/"
 
 # Build binary rpm's
-rpmbuild -ba --clean -D "version $VERSION" -D "release $RELEASE" -D "distro $DISTRO" "$SCRIPT_DIR/rist.spec" || exit 1
-cp -uf "$RPMBUILDROOT"/RPMS/*/rist-$RPM_VERSION.*.rpm "$INSTALLER_DIR"
+rpmbuild -ba --clean -D "version $VERSION" -D "release $RELEASE" -D "distro $DISTRO" "$SCRIPT_DIR/librist.spec" || exit 1
 cp -uf "$RPMBUILDROOT"/RPMS/*/librist-$RPM_VERSION.*.rpm "$INSTALLER_DIR"
-cp -uf "$RPMBUILDROOT"/RPMS/*/librist-devel-$RPM_VERSION.*.rpm "$INSTALLER_DIR"
-cp -uf "$RPMBUILDROOT"/SRPMS/rist-$RPM_VERSION.src.rpm "$INSTALLER_DIR"
+cp -uf "$RPMBUILDROOT"/SRPMS/librist-$RPM_VERSION.src.rpm "$INSTALLER_DIR"

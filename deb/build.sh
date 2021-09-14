@@ -44,37 +44,17 @@ ARCH=$(dpkg-architecture -qDEB_BUILD_ARCH)
 
 # Temporary system root.
 SYSROOT="$BUILD_DIR/tmproot"
+rm -rf "$SYSROOT"
+mkdir -p "$SYSROOT/DEBIAN"
+sed -e "s/{{VERSION}}/$VERSION/g" -e "s/{{ARCH}}/$ARCH/g" "$SCRIPT_DIR/librist.control" >"$SYSROOT/DEBIAN/control"
 
 # Build RIST
-cd "$BUILD_DIR"
-meson librist --default-library both
-ninja
+meson setup --buildtype release --default-library both --prefix "$SYSROOT/usr" "$BUILD_DIR" "$REPO_DIR"
+ninja install -C "$BUILD_DIR"
 
-# Prepare a package.
-prepare-deb() {
-    local pkg=$1
-    rm -rf "$SYSROOT"
-    mkdir -p "$SYSROOT/DEBIAN"
-    sed -e "s/{{VERSION}}/$VERSION/g" -e "s/{{ARCH}}/$ARCH/g" "$SCRIPT_DIR/$pkg.control" >"$SYSROOT/DEBIAN/control"
-    install -m 755 "$SCRIPT_DIR/$pkg.postinst" "$SYSROOT/DEBIAN/postinst"
-}
+# Adjust file protections.
+chmod 0644 $(find "$SYSROOT" -type f)
+chmod 0755 $(find "$SYSROOT" -type f) "$SYSROOT"/usr/bin/rist*
 
 # Build rist package
-prepare-deb rist
-mkdir -p "$SYSROOT/usr/bin"
-install -m 755 tools/rist2rist tools/ristreceiver tools/ristsender tools/ristsrppasswd "$SYSROOT/usr/bin"
-dpkg --build "$SYSROOT" "$INSTALLER_DIR"
-
-# Build librist package    
-prepare-deb librist
-mkdir -p "$SYSROOT/usr/lib"
-cp -d librist.so.*[0-9] "$SYSROOT/usr/lib"
-chmod 755 "$SYSROOT"/usr/lib/librist.so*
-dpkg --build "$SYSROOT" "$INSTALLER_DIR"
-
-# Build librist-dev package    
-prepare-deb librist-dev
-mkdir -p "$SYSROOT/usr/lib" "$SYSROOT/usr/include/librist"
-cp -d librist.so librist.a "$SYSROOT/usr/lib"
-install -m 644 include/*.h include/librist/*.h librist/include/librist/*.h "$SYSROOT/usr/include/librist"
-dpkg --build "$SYSROOT" "$INSTALLER_DIR"
+fakeroot dpkg --build "$SYSROOT" "$INSTALLER_DIR"
