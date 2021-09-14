@@ -134,7 +134,8 @@ function Cleanup-Build()
 if ((-not $NoGit) -and (-not $NoBuild)) {
 
     # Get URL of repo from URL.txt file in root directory (remove comments, keep one line).
-    $RepoUrl = ((Get-Content "$RootDir\URL.txt") -notmatch '^ *$' -notmatch '^ *#' | Select-Object -Last 1)
+    $RepoUrl = ((Get-Content "$RootDir\URL.txt") -notmatch '^ *$' -notmatch '^ *#' -match '^URL=' -replace 'URL=','' | Select-Object -Last 1)
+    $RepoBranch = ((Get-Content "$RootDir\URL.txt") -notmatch '^ *$' -notmatch '^ *#' -match '^BRANCH=' -replace 'BRANCH=','' | Select-Object -Last 1)
 
     # Clone repository or update it.
     # Note that git outputs its log on stderr, so use --quiet.
@@ -142,8 +143,8 @@ if ((-not $NoGit) -and (-not $NoBuild)) {
         # The repo is already cloned, just update it.
         Write-Output "Updating repository ..."
         Push-Location $RepoDir
-        git checkout master --quiet
-        git pull origin master
+        git checkout $RepoBranch --quiet
+        git pull origin $RepoBranch --quiet
         Pop-Location
     }
     else {
@@ -153,6 +154,9 @@ if ((-not $NoGit) -and (-not $NoBuild)) {
         if (-not (Test-Path "$RepoDir\.git")) {
             Exit-Script "Failed to clone $RepoUrl"
         }
+        Push-Location $RepoDir
+        git checkout $RepoBranch --quiet
+        Pop-Location
     }
 
     # Checkout the required tag. Cleanup the build directories to restart from scratch.
