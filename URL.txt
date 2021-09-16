@@ -7,5 +7,5 @@ BRANCH=master
 # If a temporary alternate URL is needed, for instance waiting for a
 # merge request to be merged, other URL's can be added below. Only
 # the last (uncommented) URL is used.
-URL=https://code.videolan.org/lelegard/librist.git
-BRANCH=cpp
+# URL=https://code.videolan.org/lelegard/librist.git
+# BRANCH=cpp
