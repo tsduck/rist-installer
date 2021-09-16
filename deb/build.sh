@@ -57,4 +57,4 @@ chmod 0644 $(find "$SYSROOT" -type f)
 chmod 0755 $(find "$SYSROOT" -type f) "$SYSROOT"/usr/bin/rist*
 
 # Build rist package
-fakeroot dpkg --build "$SYSROOT" "$INSTALLER_DIR"
+dpkg-deb --build --root-owner-group "$SYSROOT" "$INSTALLER_DIR"
