@@ -38,6 +38,11 @@
   no tag on the current commit. By default, use a detailed version number
   (most recent version, number of commits since then, short commit SHA).
 
+ .PARAMETER Branch
+
+  Switch to the specified local branch after updating the repository.
+  Useful when local patches are not yet merged in the main repository.
+
  .PARAMETER Clean
 
   Cleanup the build directory and exit. Do not build anything.
@@ -71,6 +76,7 @@
 [CmdletBinding()]
 param(
     [switch]$BareVersion = $false,
+    [string]$Branch = "",
     [switch]$Clean = $false,
     [switch]$GitHubActions = $false,
     [switch]$NoBuild = $false,
@@ -167,6 +173,12 @@ if ((-not $NoGit) -and (-not $NoBuild)) {
         Pop-Location
         Cleanup-Build
     }
+    elseif ($Branch -ne "") {
+        Write-Output "Checking out branch $Branch ..."
+        Push-Location $RepoDir
+        git checkout $Branch --quiet
+        Pop-Location
+    }
 }
 
 # Get librist version from repository.
@@ -241,8 +253,8 @@ if (-not $NoBuild) {
     $PreviousEnv = (Update-Environment $LocalScript)
 
     # Build using meson for local architecture.
-    meson setup --backend vs2019 --buildtype release --default-library both $BuildDir\Release-${LocalArch} $RepoDir
-    meson setup --backend vs2019 --buildtype debug   --default-library both $BuildDir\Debug-${LocalArch}   $RepoDir
+    meson setup --backend vs2022 --buildtype release --default-library both $BuildDir\Release-${LocalArch} $RepoDir
+    meson setup --backend vs2022 --buildtype debug   --default-library both $BuildDir\Debug-${LocalArch}   $RepoDir
 
     meson compile -C $BuildDir\Release-${LocalArch}
     meson compile -C $BuildDir\Debug-${LocalArch}
@@ -252,8 +264,8 @@ if (-not $NoBuild) {
     $PreviousEnv = (Update-Environment $OtherScript)
 
     # Build using the other architecture.
-    meson setup --backend vs2019 --buildtype release --default-library both $BuildDir\Release-${OtherArch} $RepoDir
-    meson setup --backend vs2019 --buildtype debug   --default-library both $BuildDir\Debug-${OtherArch}   $RepoDir
+    meson setup --backend vs2022 --buildtype release --default-library both $BuildDir\Release-${OtherArch} $RepoDir
+    meson setup --backend vs2022 --buildtype debug   --default-library both $BuildDir\Debug-${OtherArch}   $RepoDir
 
     meson compile -C $BuildDir\Release-${OtherArch}
     meson compile -C $BuildDir\Debug-${OtherArch}
