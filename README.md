@@ -32,9 +32,9 @@ Temporary subdirectories, created by the scripts, not archived in the repo:
 On Linux, the package is named `librist-(version).deb` or `.rpm`, depending on the distro.
 The package can be installed using the `dpkg` or `rpm` command, again depending on the distro.
 
-It is expected that, at some point, the librist packages will be included in the major Linux
-distros in their standard repositories. In the meantime, binary packages can be found in the
-[release area of this project](https://github.com/tsduck/rist-installer/releases).
+As of version 0.2.8 of librist, many Linux distros now include librist packages.
+Binary packages for Linux are no longer provided with the releases of this project,
+but scripts to build them remain available.
 
 ## Windows
 
