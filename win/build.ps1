@@ -1,7 +1,7 @@
 ﻿#-----------------------------------------------------------------------------
 #
 #  RIST library installers
-#  Copyright (c) 2021, Thierry Lelegard
+#  Copyright (c) 2021-2025, Thierry Lelegard
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -130,7 +130,7 @@ if (-not $NSIS) {
 function Cleanup-Build()
 {
     foreach ($Conf in @("Release", "Debug")) {
-        foreach ($Arch in @("Win32", "x64")) {
+        foreach ($Arch in @("Win32", "x64", "Arm64")) {
             Remove-Item $BuildDir\${Conf}-${Arch} -Force -Recurse -ErrorAction SilentlyContinue
         }
     }
@@ -197,13 +197,13 @@ $VersionInfo = "$($VField[0]).$($VField[1]).$($VField[2]).$($VField[3])"
 
 Write-Output "RIST version is $Version, Windows version info is $VersionInfo"
 
-# A function to define all environment variables from a VS .bat script.
-# Return the previous values of modified environment variables.
-function Update-Environment([string]$ScriptName)
+# A function to build librist for a given architecture.
+function Build-OnArch([string]$Arch, [string]$InitScript)
 {
-    $Script = (Get-ChildItem -Recurse -Path "C:\Program Files*\Microsoft Visual Studio" -Include $ScriptName | Select-Object -First 1).FullName
+    # Setup environment for compilation: search initialization script.
+    $Script = (Get-ChildItem -Recurse -Path "C:\Program Files*\Microsoft Visual Studio" -Include $InitScript | Select-Object -First 1).FullName
     if (-not $Script) {
-        Exit-Script "$OtherScript not found in Visual Studio"
+        Exit-Script "$InitScript not found in Visual Studio"
     }
 
     # Run the CMD script, get all environment variable, set modified ones.
@@ -218,12 +218,16 @@ function Update-Environment([string]$ScriptName)
             Set-Item env:$name $value
         }
     }
-    return $PreviousEnv
-}
+ 
+    # Generate Visual Studio projet files.
+    meson setup --backend vs2022 --buildtype release --default-library both $BuildDir\Release-${Arch} $RepoDir
+    meson setup --backend vs2022 --buildtype debug   --default-library both $BuildDir\Debug-${Arch}   $RepoDir
 
-# A function to restore a previous saved set of environment variables.
-function Restore-Environment($PreviousEnv)
-{
+    # Build using Visual Studio.
+    meson compile -C $BuildDir\Release-${Arch}
+    meson compile -C $BuildDir\Debug-${Arch}
+
+    # Restore previous environment variables.
     $PreviousEnv.GetEnumerator() | ForEach-Object {
         $name = $_.Name
         Set-Item env:$name $_.Value
@@ -236,42 +240,24 @@ if (-not $NoBuild) {
     Cleanup-Build
 
     # Get local architecture.
-    if ([System.IntPtr]::Size -eq 4) {
-        $LocalArch = "Win32"
-        $OtherArch = "x64"
-        $LocalScript = "vcvars32.bat"
-        $OtherScript = "vcvarsx86_amd64.bat"
+    if ($env:PROCESSOR_ARCHITECTURE -like 'arm64*') {
+        Build-OnArch "Arm64" "vcvarsarm64.bat"
+        Build-OnArch "x64"   "vcvarsarm64_amd64.bat"
+        Build-OnArch "Win32" "vcvarsarm64_x86.bat"
+    }
+    elseif ($env:PROCESSOR_ARCHITECTURE -like 'amd64*') {
+        Build-OnArch "Arm64" "vcvarsamd64_arm64.bat"
+        Build-OnArch "x64"   "vcvars64.bat"
+        Build-OnArch "Win32" "vcvarsamd64_x86.bat"
+    }
+    elseif ($env:PROCESSOR_ARCHITECTURE -like 'x86*') {
+        Build-OnArch "Arm64" "vcvarsx86_arm64.bat"
+        Build-OnArch "x64"   "vcvarsx86_amd64.bat"
+        Build-OnArch "Win32" "vcvars32.bat"
     }
     else {
-        $LocalArch = "x64"
-        $OtherArch = "Win32"
-        $LocalScript = "vcvars64.bat"
-        $OtherScript = "vcvarsamd64_x86.bat"
+        Exit-Script "Unknown architecture ${env:PROCESSOR_ARCHITECTURE}"
     }
-
-    # Setup environment for local compilation.
-    $PreviousEnv = (Update-Environment $LocalScript)
-
-    # Build using meson for local architecture.
-    meson setup --backend vs2022 --buildtype release --default-library both $BuildDir\Release-${LocalArch} $RepoDir
-    meson setup --backend vs2022 --buildtype debug   --default-library both $BuildDir\Debug-${LocalArch}   $RepoDir
-
-    meson compile -C $BuildDir\Release-${LocalArch}
-    meson compile -C $BuildDir\Debug-${LocalArch}
-
-    # Restore environment and set it for cross-compilation.
-    Restore-Environment $PreviousEnv
-    $PreviousEnv = (Update-Environment $OtherScript)
-
-    # Build using the other architecture.
-    meson setup --backend vs2022 --buildtype release --default-library both $BuildDir\Release-${OtherArch} $RepoDir
-    meson setup --backend vs2022 --buildtype debug   --default-library both $BuildDir\Debug-${OtherArch}   $RepoDir
-
-    meson compile -C $BuildDir\Release-${OtherArch}
-    meson compile -C $BuildDir\Debug-${OtherArch}
-
-    # Restore previous environment variables.
-    Restore-Environment $PreviousEnv
 }
 
 # Build the binary installer.

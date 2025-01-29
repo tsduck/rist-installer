@@ -3,42 +3,30 @@
 [RIST](https://code.videolan.org/rist) is the Reliable Internet Stream Transport.
 Its basic library and tools are in project [librist](https://code.videolan.org/rist/librist).
 
-This repository contains scripts to build librist installers for Linux and Windows.
+This repository contains scripts to build librist installers for Windows.
+
+In 2021, when this installer project was created, librist was not available on
+any Linux distro. The project contained scripts to build `.rpm` and `.deb`
+installers for Linux. Now, in 2025, all major Linux distros include librist
+and this part of the installer project is no longer necessary and was deleted.
+This project now only provides librist installers for Windows.
+
+On macOS, librist is installed using [Homebrew](https://brew.sh), the package
+manager for open-source projects on macOS. Use command `brew install librist`.
 
 This repository does not contain any third-party source code, neither librist
 nor any of its dependencies. It contains only scripts and configuration files
 which download third-party source code when necessary and build it.
 
-Subdirectories:
-
-- `deb`: Build on apt-based distros (Debian, Ubuntu, Rapsbian, Mint, etc.)
-- `rpm`: Build on rpm-based distros (Red Hat, CentOS, Fedora, Oracle, etc.)
-- `win`: Build on Windows, using Visual Studio.
-
-To build the RIST installers on a given platform, run the script `build.sh` or
-`build.ps1` in the subdirectory for this platform.
-
 Before building the RIST installers for the first time, make sure to run the
-script `install-prerequisites.sh` or `install-prerequisites.ps1` to install
-the required building tools.
+script `install-prerequisites.ps1` to install the required building tools.
 
 Temporary subdirectories, created by the scripts, not archived in the repo:
 
 - `installers`: All binary installers are stored here.
 - `build`: Used to compile RIST and build the installers.
 
-## Linux
-
-On Linux, the package is named `librist-(version).deb` or `.rpm`, depending on the distro.
-The package can be installed using the `dpkg` or `rpm` command, again depending on the distro.
-
-As of version 0.2.8 of librist, many Linux distros now include librist packages.
-Binary packages for Linux are no longer provided with the releases of this project,
-but scripts to build them remain available.
-
-## Windows
-
-### Installing librist on Windows
+## Installing librist on Windows
 
 On Windows, the executable installer is named `librist-(version).exe`.
 Simply run it to install librist.
@@ -48,7 +36,7 @@ script `win/install-librist.ps1` can be freely copied in your project. Run it in
 pre-build phase of your CI workflow. The script automatically downloads and installs
 the latest version of librist for Windows.
 
-### Building Windows applications with librist
+## Building Windows applications with librist
 
 After installing the librist binary, an environment variable named `LIBRIST` is
 defined to the installation root (typically `C:\Program Files (x86)\librist`).
@@ -65,15 +53,4 @@ the librist DLL or static library.
 ~~~
 <Import Project="$(LIBRIST)\librist-dll.props"/>
 <Import Project="$(LIBRIST)\librist-static.props"/>
-~~~
-
-## macOS
-
-This project does not provide binary packages for macOS. On this platform, librist
-is installed using [Homebrew](https://brew.sh), the package manager for open-source
-projects on macOS.
-
-Use command:
-~~~
-brew install librist
 ~~~

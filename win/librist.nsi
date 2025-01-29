@@ -1,7 +1,7 @@
 ;-----------------------------------------------------------------------------
 ;
 ;  RIST library installers
-;  Copyright (c) 2021, Thierry Lelegard
+;  Copyright (c) 2021-2025, Thierry Lelegard
 ;  All rights reserved.
 ;
 ;  Redistribution and use in source and binary forms, with or without
@@ -99,6 +99,7 @@ InstallDirRegKey HKLM "${ProductKey}" "InstallDir"
 function .onInit
     ; In 64-bit installers, don't use registry redirection.
     ${If} ${RunningX64}
+    ${OrIf} ${IsNativeARM64}
         SetRegView 64
     ${EndIf}
 functionEnd
@@ -107,6 +108,7 @@ functionEnd
 function un.onInit
     ; In 64-bit installers, don't use registry redirection.
     ${If} ${RunningX64}
+    ${OrIf} ${IsNativeARM64}
         SetRegView 64
     ${EndIf}
 functionEnd
@@ -135,6 +137,21 @@ Section "Install"
 
     ; Libraries.
     CreateDirectory "$INSTDIR\lib"
+
+    ; Arm64 libraries.
+    CreateDirectory "$INSTDIR\lib\Release-Arm64"
+    SetOutPath "$INSTDIR\lib\Release-Arm64"
+    File "${BuildDir}\Release-Arm64\librist.dll"
+    File "${BuildDir}\Release-Arm64\librist.lib"
+    File "${BuildDir}\Release-Arm64\librist.a"
+
+    CreateDirectory "$INSTDIR\lib\Debug-Arm64"
+    SetOutPath "$INSTDIR\lib\Debug-Arm64"
+    File "${BuildDir}\Debug-Arm64\librist.dll"
+    File "${BuildDir}\Debug-Arm64\librist.lib"
+    File "${BuildDir}\Debug-Arm64\librist.a"
+
+    ; Win64 libraries.
     CreateDirectory "$INSTDIR\lib\Release-x64"
     SetOutPath "$INSTDIR\lib\Release-x64"
     File "${BuildDir}\Release-x64\librist.dll"
@@ -147,6 +164,7 @@ Section "Install"
     File "${BuildDir}\Debug-x64\librist.lib"
     File "${BuildDir}\Debug-x64\librist.a"
 
+    ; Win32 libraries.
     CreateDirectory "$INSTDIR\lib\Release-Win32"
     SetOutPath "$INSTDIR\lib\Release-Win32"
     File "${BuildDir}\Release-Win32\librist.dll"
@@ -162,11 +180,25 @@ Section "Install"
     ; Tools.
     CreateDirectory "$INSTDIR\bin"
     SetOutPath "$INSTDIR\bin"
-    File "${BuildDir}\Release-Win32\librist.dll"
-    File "${BuildDir}\Release-Win32\tools\rist2rist.exe"
-    File "${BuildDir}\Release-Win32\tools\ristreceiver.exe"
-    File "${BuildDir}\Release-Win32\tools\ristsender.exe"
-    File "${BuildDir}\Release-Win32\tools\ristsrppasswd.exe"
+    ${If} ${IsNativeARM64}
+        File "${BuildDir}\Release-Arm64\librist.dll"
+        File "${BuildDir}\Release-Arm64\tools\rist2rist.exe"
+        File "${BuildDir}\Release-Arm64\tools\ristreceiver.exe"
+        File "${BuildDir}\Release-Arm64\tools\ristsender.exe"
+        File "${BuildDir}\Release-Arm64\tools\ristsrppasswd.exe"
+    ${ElseIf} ${RunningX64}
+        File "${BuildDir}\Release-x64\librist.dll"
+        File "${BuildDir}\Release-x64\tools\rist2rist.exe"
+        File "${BuildDir}\Release-x64\tools\ristreceiver.exe"
+        File "${BuildDir}\Release-x64\tools\ristsender.exe"
+        File "${BuildDir}\Release-x64\tools\ristsrppasswd.exe"
+    ${Else}
+        File "${BuildDir}\Release-Win32\librist.dll"
+        File "${BuildDir}\Release-Win32\tools\rist2rist.exe"
+        File "${BuildDir}\Release-Win32\tools\ristreceiver.exe"
+        File "${BuildDir}\Release-Win32\tools\ristsender.exe"
+        File "${BuildDir}\Release-Win32\tools\ristsrppasswd.exe"
+    ${EndIf}
 
     ; Add an environment variable to installation root.
     WriteRegStr HKLM ${EnvironmentKey} "LIBRIST" "$INSTDIR"
