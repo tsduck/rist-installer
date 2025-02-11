@@ -188,6 +188,14 @@ if (-not $MSBuild) {
     Exit-Script -NoPause:$NoPause "MSBuild not found"
 }
 
+# Locate Meson. If not found, leep "meson" and rely on Path.
+Write-Output "Searching Meson ..."
+$Meson = Get-Item "C:\Program Files*\Meson\meson.exe" | ForEach-Object { $_.FullName} | Select-Object -First 1
+if (-not $Meson) {
+    Write-Output "Meson not found, assume it is in the Path"
+    $Meson = "meson"
+}
+
 # Locate NSIS, the Nullsoft Scriptable Installation System.
 Write-Output "Searching NSIS ..."
 $NSIS = Get-Item "C:\Program Files*\NSIS\makensis.exe" | ForEach-Object { $_.FullName} | Select-Object -Last 1
@@ -197,6 +205,7 @@ if (-not $NSIS) {
 
 Write-Output "Host architecture: $($HOSTARCH.platform)"
 Write-Output "MSBuild: $MSBuild"
+Write-Output "Meson: $Meson"
 Write-Output "NSIS: $NSIS"
 
 # A function to cleanup the build directories.
@@ -282,7 +291,7 @@ function Build-OnArch([string]$ArchIndex, [string]$Configuration)
     Write-Output "Output directory: $ArchBuildDir"
 
     # Generate Visual Studio projet files.
-    meson setup --backend vs2022 --buildtype $BuildType --default-library both $ArchBuildDir $RepoDir
+    & $Meson setup --backend vs2022 --buildtype $BuildType --default-library both $ArchBuildDir $RepoDir
 
     # If the target is not the same as the host, modify all VS project files.
     if ($Platform -ne $HOSTARCH.platform) {
