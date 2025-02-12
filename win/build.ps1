@@ -303,6 +303,7 @@ function Build-OnArch([string]$ArchIndex, [string]$Configuration)
                 else {
                     foreach ($i in 0..$($Arch.repl.Count - 1)) {
                         $_ = $_.Replace($HOSTARCH.repl[$i],$Arch.repl[$i])
+                        $_ = $_.Replace($HOSTARCH.repl[$i].ToLower(),$Arch.repl[$i])
                     }
                     $_
                 }
