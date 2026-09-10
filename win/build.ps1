@@ -338,7 +338,7 @@ if ((-not $NoPatch) -and ($VersionInt -eq 217)) {
 # initialized with cl.exe and all other environment variables set, or it searches for the
 # compiler and build the environment. If cl.exe is found in the PATH but the compilation
 # environment is not fully set, then it fails.
-$env:Path = ($env:Path -split ';' | Where-Object { "$_" -ne "" -and -not (Test-Path -LiteralPath "$_\cl.exe" -PathType Leaf -ErrorAction SilentlyContinue) }) -join ';'
+$env:Path = ($env:Path -split ';' | Where-Object { "$_" -ne "" -and -not (Test-Path "$_\cl.exe" -PathType Leaf -ErrorAction SilentlyContinue) }) -join ';'
 
 # A function to build librist for a given architecture (index in $ARCHDEFS).
 function Build-OnArch([string]$ArchIndex, [string]$Configuration)
