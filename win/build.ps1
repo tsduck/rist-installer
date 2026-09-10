@@ -317,7 +317,7 @@ if ((-not $NoPatch) -and ($VersionInt -lt 217)) {
     }
 }
 
-# On Windows, version v0.2.17, need to patch transport.h and add include/common in installer.
+# On Windows, librist version v0.2.17, need to patch transport.h and add include/common in installer.
 if ((-not $NoPatch) -and ($VersionInt -eq 217)) {
     $TransportH = "$RepoDir\include\librist\transport.h"
     if ((Select-String -Path $TransportH -Pattern "common/attributes.h") -eq $null) {
@@ -333,6 +333,13 @@ if ((-not $NoPatch) -and ($VersionInt -eq 217)) {
     $ExtraOptionsNSIS += "/DIncludeCommon=true"
 }
 
+# Remove components of PATH which reference cl.exe, the MS compiler. The reason is that
+# when meson looks for the compiler, either it assumes that the environment is already fully
+# initialized with cl.exe and all other environment variables set, or it searches for the
+# compiler and build the environment. If cl.exe is found in the PATH but the compilation
+# environment is not fully set, then it fails.
+$env:Path = ($env:Path -split ';' | Where-Object { "$_" -ne "" -and -not (Test-Path -LiteralPath "$_\cl.exe" -PathType Leaf -ErrorAction SilentlyContinue) }) -join ';'
+
 # A function to build librist for a given architecture (index in $ARCHDEFS).
 function Build-OnArch([string]$ArchIndex, [string]$Configuration)
 {
@@ -345,7 +352,7 @@ function Build-OnArch([string]$ArchIndex, [string]$Configuration)
     Write-Output "Output directory: $ArchBuildDir"
 
     # Generate Visual Studio projet files.
-    & $Meson setup --backend vs2022 --buildtype $BuildType --default-library both $ArchBuildDir $RepoDir
+    & $Meson setup --backend vs2026 --buildtype $BuildType --default-library both $ArchBuildDir $RepoDir
 
     # If the target is not the same as the host, modify all VS project files.
     if ($Platform -ne $HOSTARCH.platform) {
