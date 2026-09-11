@@ -128,6 +128,7 @@ Section "Install"
     Delete "${ScriptDir}\librist.props"
 
     ; Header files.
+    RMDir /r "$INSTDIR\include"
     CreateDirectory "$INSTDIR\include"
     CreateDirectory "$INSTDIR\include\librist"
     SetOutPath "$INSTDIR\include\librist"
@@ -141,6 +142,7 @@ Section "Install"
 !endif
 
     ; Libraries.
+    RMDir /r "$INSTDIR\lib"
     CreateDirectory "$INSTDIR\lib"
 
 !ifdef ArchARM64
@@ -189,6 +191,7 @@ Section "Install"
 !endif
 
     ; Tools for the local architecture only.
+    RMDir /r "$INSTDIR\bin"
     CreateDirectory "$INSTDIR\bin"
     SetOutPath "$INSTDIR\bin"
     ${If} ${IsNativeARM64}

@@ -356,7 +356,7 @@ function Build-OnArch([string]$ArchIndex, [string]$Configuration)
 
     # If the target is not the same as the host, modify all VS project files.
     if ($Platform -ne $HOSTARCH.platform) {
-        Get-ChildItem $ArchBuildDir -Recurse -File -Include @("*.vcxproj", "*.sln") | ForEach-Object {
+        Get-ChildItem $ArchBuildDir -Recurse -File -Include @("*.vcxproj", "*.sln", "*.slnx") | ForEach-Object {
             (Get-Content $_.FullName) | ForEach-Object {
                 if ($_ -like "*vcvarsall.bat*") {
                     $_ -replace " $($HOSTARCH.vcvars) "," $($HOSTARCH.vcvars)_$($ArchDef.vcvars) "
